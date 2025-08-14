@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TravelAI - AI Travel Planner</title>
+</head>
+<body>
+    <h1>AI Travel Planner</h1>
+    <input type="text" id="searchBox" placeholder="Where do you want to go?">
+    <button onclick="performSearch()">Search</button>
+    <div id="results"></div>
+
+<script>
+const backendURL = window.location.hostname.includes("onrender.com")
+    ? "https://your-render-app.onrender.com/api/travel-ai"
+    : "http://localhost:3000/api/travel-ai";
+
+async function performSearch() {
+    const query = document.getElementById("searchBox").value.trim();
+    if (!query) return;
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const latitude = pos.coords.latitude;
+            const longitude = pos.coords.longitude;
+
+            document.getElementById("results").innerHTML = "Loading...";
+
+            try {
+                const res = await fetch(backendURL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query, latitude, longitude })
+                });
+                const data = await res.json();
+                if (data.answer) {
+                    document.getElementById("results").innerHTML = `<p>${data.answer.replace(/\n/g, "<br>")}</p>`;
+                } else {
+                    document.getElementById("results").innerHTML = `<p>Error: ${data.error}</p>`;
+                }
+            } catch (err) {
+                document.getElementById("results").innerHTML = `<p>Backend unreachable.</p>`;
+            }
+        });
+    } else {
+        alert("Geolocation not supported by your browser.");
+    }
+}
+</script>
+</body>
+</html>
